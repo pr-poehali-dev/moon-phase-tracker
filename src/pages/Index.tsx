@@ -144,14 +144,70 @@ const Index = () => {
   const calendarDays = generateCalendar();
   const today = new Date().getDate();
 
-  const lunarInfluence = [
-    { area: 'Здоровье', icon: 'Heart', recommendation: 'Благоприятный период для восстановления сил', status: 'good' },
-    { area: 'Карьера', icon: 'Briefcase', recommendation: 'Удачное время для новых начинаний', status: 'good' },
-    { area: 'Финансы', icon: 'TrendingUp', recommendation: 'Избегайте крупных трат', status: 'caution' },
-    { area: 'Отношения', icon: 'Users', recommendation: 'Время для укрепления связей', status: 'good' },
-    { area: 'Садоводство', icon: 'Sprout', recommendation: 'Оптимально для посадки корнеплодов', status: 'good' },
-    { area: 'Стрижка', icon: 'Scissors', recommendation: 'Волосы будут расти медленнее', status: 'neutral' }
-  ];
+  const getPersonalizedRecommendations = () => {
+    const phase = currentMoonPhase.phase;
+    const isGrowing = phase >= 0 && phase < 4;
+    const recommendations = [];
+
+    if (hasProfile) {
+      if (bmi && parseFloat(bmi) > 25 && isGrowing) {
+        recommendations.push({
+          area: 'Здоровье',
+          icon: 'Heart',
+          recommendation: `Растущая луна - начните программу детокса. Ваш ИМТ ${bmi} указывает на необходимость контроля веса`,
+          status: 'caution',
+          personal: true
+        });
+      } else if (bmi && parseFloat(bmi) < 18.5 && !isGrowing) {
+        recommendations.push({
+          area: 'Здоровье',
+          icon: 'Heart',
+          recommendation: `Убывающая луна - усильте питание. Ваш ИМТ ${bmi} указывает на недостаток массы`,
+          status: 'caution',
+          personal: true
+        });
+      } else {
+        recommendations.push({
+          area: 'Здоровье',
+          icon: 'Heart',
+          recommendation: isGrowing ? 'Растущая луна благоприятна для активных тренировок и набора мышечной массы' : 'Убывающая луна - время для очищения организма и восстановления',
+          status: 'good',
+          personal: true
+        });
+      }
+
+      if (age && age > 40 && phase >= 4 && phase < 6) {
+        recommendations.push({
+          area: 'Самочувствие',
+          icon: 'Activity',
+          recommendation: 'Полнолуние может влиять на давление и сон в вашем возрасте. Больше отдыхайте',
+          status: 'caution',
+          personal: true
+        });
+      }
+
+      if (userProfile.gender === 'female' && isGrowing) {
+        recommendations.push({
+          area: 'Красота',
+          icon: 'Sparkles',
+          recommendation: 'Растущая луна - лучшее время для масок, процедур для роста волос и укрепления ногтей',
+          status: 'good',
+          personal: true
+        });
+      }
+    }
+
+    recommendations.push(
+      { area: 'Карьера', icon: 'Briefcase', recommendation: isGrowing ? 'Растущая луна благоприятна для новых проектов и переговоров' : 'Убывающая луна - время завершить начатое и проанализировать результаты', status: 'good', personal: false },
+      { area: 'Финансы', icon: 'TrendingUp', recommendation: isGrowing ? 'Растущая луна - можно планировать крупные покупки' : 'Убывающая луна - избегайте необдуманных трат, копите', status: isGrowing ? 'good' : 'caution', personal: false },
+      { area: 'Отношения', icon: 'Users', recommendation: phase >= 4 && phase < 6 ? 'Полнолуние обостряет эмоции - будьте терпеливы с близкими' : 'Благоприятное время для общения', status: phase >= 4 && phase < 6 ? 'caution' : 'good', personal: false },
+      { area: 'Садоводство', icon: 'Sprout', recommendation: isGrowing ? 'Растущая луна - сажайте растения, плоды которых над землёй' : 'Убывающая луна - время для корнеплодов и обрезки', status: 'good', personal: false }
+    );
+
+    return recommendations;
+  };
+
+  const lunarInfluence = getPersonalizedRecommendations();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1A1F2C] via-[#221F3A] to-[#1A1F2C]">
@@ -402,14 +458,35 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="influence">
+            {hasProfile && (
+              <Card className="mb-6 bg-gradient-to-r from-primary/20 to-accent/20 backdrop-blur border-primary/40">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Icon name="Sparkles" size={24} className="text-primary" />
+                    Персональные рекомендации
+                  </CardTitle>
+                  <CardDescription>На основе ваших данных и текущей фазы луны</CardDescription>
+                </CardHeader>
+              </Card>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {lunarInfluence.map((item, index) => (
-                <Card key={index} className="bg-card/50 backdrop-blur border-primary/20 hover:border-primary/40 transition-all">
+                <Card 
+                  key={index} 
+                  className={`bg-card/50 backdrop-blur border-primary/20 hover:border-primary/40 transition-all ${
+                    item.personal ? 'ring-2 ring-primary/30' : ''
+                  }`}
+                >
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                       <span className="flex items-center gap-2">
                         <Icon name={item.icon as any} size={20} className="text-primary" />
                         {item.area}
+                        {item.personal && (
+                          <Badge variant="outline" className="ml-2 text-xs">
+                            Для вас
+                          </Badge>
+                        )}
                       </span>
                       <Badge variant={item.status === 'good' ? 'default' : item.status === 'caution' ? 'destructive' : 'secondary'}>
                         {item.status === 'good' ? '✓' : item.status === 'caution' ? '⚠' : '○'}
