@@ -1,11 +1,60 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import Icon from '@/components/ui/icon';
+
+interface UserProfile {
+  birthDate: string;
+  weight: string;
+  height: string;
+  gender: 'male' | 'female' | '';
+}
 
 const Index = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile>(() => {
+    const saved = localStorage.getItem('userProfile');
+    return saved ? JSON.parse(saved) : { birthDate: '', weight: '', height: '', gender: '' };
+  });
+  const [tempProfile, setTempProfile] = useState<UserProfile>(userProfile);
+
+  useEffect(() => {
+    localStorage.setItem('userProfile', JSON.stringify(userProfile));
+  }, [userProfile]);
+
+  const calculateAge = (birthDate: string) => {
+    if (!birthDate) return null;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const calculateBMI = (weight: string, height: string) => {
+    const w = parseFloat(weight);
+    const h = parseFloat(height) / 100;
+    if (!w || !h) return null;
+    return (w / (h * h)).toFixed(1);
+  };
+
+  const handleSaveProfile = () => {
+    setUserProfile(tempProfile);
+    setIsProfileOpen(false);
+  };
+
+  const age = calculateAge(userProfile.birthDate);
+  const bmi = calculateBMI(userProfile.weight, userProfile.height);
+  const hasProfile = userProfile.birthDate && userProfile.weight && userProfile.height;
 
   const getMoonPhase = (date: Date = new Date()) => {
     const year = date.getFullYear();
@@ -107,10 +156,96 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-[#1A1F2C] via-[#221F3A] to-[#1A1F2C]">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <header className="text-center mb-12 animate-[fade-in_0.6s_ease-out]">
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-[#9b87f5] to-[#E5DEFF] bg-clip-text text-transparent">
-            Лунный календарь
-          </h1>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex-1" />
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-[#9b87f5] to-[#E5DEFF] bg-clip-text text-transparent">
+              Лунный календарь
+            </h1>
+            <div className="flex-1 flex justify-end">
+              <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="icon" className="rounded-full">
+                    <Icon name="User" size={20} />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Личные данные</DialogTitle>
+                    <DialogDescription>
+                      Укажите свои данные для персонализированных рекомендаций
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="birthDate">Дата рождения</Label>
+                      <Input
+                        id="birthDate"
+                        type="date"
+                        value={tempProfile.birthDate}
+                        onChange={(e) => setTempProfile({ ...tempProfile, birthDate: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="weight">Вес (кг)</Label>
+                        <Input
+                          id="weight"
+                          type="number"
+                          placeholder="70"
+                          value={tempProfile.weight}
+                          onChange={(e) => setTempProfile({ ...tempProfile, weight: e.target.value })}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="height">Рост (см)</Label>
+                        <Input
+                          id="height"
+                          type="number"
+                          placeholder="175"
+                          value={tempProfile.height}
+                          onChange={(e) => setTempProfile({ ...tempProfile, height: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Пол</Label>
+                      <div className="flex gap-4">
+                        <Button
+                          type="button"
+                          variant={tempProfile.gender === 'male' ? 'default' : 'outline'}
+                          className="flex-1"
+                          onClick={() => setTempProfile({ ...tempProfile, gender: 'male' })}
+                        >
+                          <Icon name="User" size={16} className="mr-2" />
+                          Мужской
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={tempProfile.gender === 'female' ? 'default' : 'outline'}
+                          className="flex-1"
+                          onClick={() => setTempProfile({ ...tempProfile, gender: 'female' })}
+                        >
+                          <Icon name="User" size={16} className="mr-2" />
+                          Женский
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="submit" onClick={handleSaveProfile}>Сохранить</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
           <p className="text-lg text-muted-foreground">Москва • {new Date().toLocaleDateString('ru-RU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          {hasProfile && (
+            <div className="mt-4 inline-flex items-center gap-4 px-4 py-2 rounded-full bg-primary/10 text-sm">
+              {age && <span>Возраст: {age} лет</span>}
+              {bmi && <span>ИМТ: {bmi}</span>}
+              <span className="capitalize">{userProfile.gender === 'male' ? 'Мужской' : userProfile.gender === 'female' ? 'Женский' : ''}</span>
+            </div>
+          )}
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
