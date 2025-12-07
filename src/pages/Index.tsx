@@ -8,9 +8,11 @@ import { UserProfileDialog, type UserProfile } from '@/components/UserProfileDia
 import { MoonPhaseCard } from '@/components/MoonPhaseCard';
 import { WeatherForecast } from '@/components/WeatherForecast';
 import { LunarCalendar } from '@/components/LunarCalendar';
+import { DayDetailsDialog } from '@/components/DayDetailsDialog';
 
 const Index = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isDateDetailsOpen, setIsDateDetailsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile>(() => {
     const saved = localStorage.getItem('userProfile');
@@ -102,6 +104,18 @@ const Index = () => {
   };
 
   const pressureStats = getPressureData();
+
+  const getPressureForDate = (date: Date) => {
+    const baselinePressure = 750;
+    const day = date.getDate();
+    const variation = Math.sin(day / 5) * 10;
+    return Math.round(baselinePressure + variation);
+  };
+
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(date);
+    setIsDateDetailsOpen(true);
+  };
 
   const holidays2025 = [
     { date: '1-6 января', name: 'Новогодние каникулы', type: 'holiday' },
@@ -257,7 +271,7 @@ const Index = () => {
               calendarDays={calendarDays}
               today={today}
               getMoonPhase={getMoonPhase}
-              onDateSelect={setSelectedDate}
+              onDateSelect={handleDateSelect}
             />
           </TabsContent>
 
@@ -337,6 +351,14 @@ const Index = () => {
         <footer className="mt-12 text-center text-sm text-muted-foreground animate-[fade-in_1.4s_ease-out]">
           <p>🌙 Лунный календарь • Данные актуальны для Москвы</p>
         </footer>
+
+        <DayDetailsDialog
+          date={selectedDate}
+          isOpen={isDateDetailsOpen}
+          onOpenChange={setIsDateDetailsOpen}
+          getMoonPhase={getMoonPhase}
+          getPressureForDate={getPressureForDate}
+        />
       </div>
     </div>
   );
