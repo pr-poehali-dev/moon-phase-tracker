@@ -112,6 +112,32 @@ const Index = () => {
     return Math.round(baselinePressure + variation);
   };
 
+  const getSunriseSunset = (date: Date) => {
+    const dayOfYear = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000);
+    const latitude = 55.75;
+    
+    const axialTilt = 23.44;
+    const declination = axialTilt * Math.sin((2 * Math.PI / 365) * (dayOfYear - 81));
+    
+    const hourAngle = Math.acos(-Math.tan(latitude * Math.PI / 180) * Math.tan(declination * Math.PI / 180));
+    const dayLength = (2 * hourAngle * 12) / Math.PI;
+    
+    const solarNoon = 12;
+    const sunriseHour = solarNoon - dayLength / 2;
+    const sunsetHour = solarNoon + dayLength / 2;
+    
+    const formatTime = (hours: number) => {
+      const h = Math.floor(hours);
+      const m = Math.floor((hours - h) * 60);
+      return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+    };
+    
+    return {
+      sunrise: formatTime(sunriseHour),
+      sunset: formatTime(sunsetHour)
+    };
+  };
+
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
     setIsDateDetailsOpen(true);
@@ -358,6 +384,7 @@ const Index = () => {
           onOpenChange={setIsDateDetailsOpen}
           getMoonPhase={getMoonPhase}
           getPressureForDate={getPressureForDate}
+          getSunriseSunset={getSunriseSunset}
         />
       </div>
     </div>

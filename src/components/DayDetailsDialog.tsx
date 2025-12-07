@@ -10,6 +10,7 @@ interface DayDetailsDialogProps {
   onOpenChange: (open: boolean) => void;
   getMoonPhase: (date: Date) => { phase: number; illumination: number; name: string; icon: string };
   getPressureForDate: (date: Date) => number;
+  getSunriseSunset: (date: Date) => { sunrise: string; sunset: string };
 }
 
 export const DayDetailsDialog: React.FC<DayDetailsDialogProps> = ({
@@ -17,12 +18,14 @@ export const DayDetailsDialog: React.FC<DayDetailsDialogProps> = ({
   isOpen,
   onOpenChange,
   getMoonPhase,
-  getPressureForDate
+  getPressureForDate,
+  getSunriseSunset
 }) => {
   if (!date) return null;
 
   const moonPhase = getMoonPhase(date);
   const pressure = getPressureForDate(date);
+  const { sunrise, sunset } = getSunriseSunset(date);
   const dayName = date.toLocaleDateString('ru-RU', { weekday: 'long' });
   const fullDate = date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
   const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
@@ -73,6 +76,28 @@ export const DayDetailsDialog: React.FC<DayDetailsDialogProps> = ({
                   <span className="text-sm font-medium text-muted-foreground">Давление</span>
                 </div>
                 <p className="text-2xl font-bold">{pressure} мм</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="bg-card/50 backdrop-blur">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <Icon name="Sunrise" size={20} className="text-orange-500" />
+                  <span className="text-sm font-medium text-muted-foreground">Восход солнца</span>
+                </div>
+                <p className="text-2xl font-bold">{sunrise}</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card/50 backdrop-blur">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <Icon name="Sunset" size={20} className="text-orange-600" />
+                  <span className="text-sm font-medium text-muted-foreground">Закат солнца</span>
+                </div>
+                <p className="text-2xl font-bold">{sunset}</p>
               </CardContent>
             </Card>
           </div>
