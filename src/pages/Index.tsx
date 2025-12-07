@@ -3,18 +3,11 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import Icon from '@/components/ui/icon';
-
-interface UserProfile {
-  birthDate: string;
-  weight: string;
-  height: string;
-  gender: 'male' | 'female' | '';
-}
+import { UserProfileDialog, type UserProfile } from '@/components/UserProfileDialog';
+import { MoonPhaseCard } from '@/components/MoonPhaseCard';
+import { WeatherForecast } from '@/components/WeatherForecast';
+import { LunarCalendar } from '@/components/LunarCalendar';
 
 const Index = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -219,80 +212,13 @@ const Index = () => {
               Лунный календарь
             </h1>
             <div className="flex-1 flex justify-end">
-              <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="icon" className="rounded-full">
-                    <Icon name="User" size={20} />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle>Личные данные</DialogTitle>
-                    <DialogDescription>
-                      Укажите свои данные для персонализированных рекомендаций
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="birthDate">Дата рождения</Label>
-                      <Input
-                        id="birthDate"
-                        type="date"
-                        value={tempProfile.birthDate}
-                        onChange={(e) => setTempProfile({ ...tempProfile, birthDate: e.target.value })}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="weight">Вес (кг)</Label>
-                        <Input
-                          id="weight"
-                          type="number"
-                          placeholder="70"
-                          value={tempProfile.weight}
-                          onChange={(e) => setTempProfile({ ...tempProfile, weight: e.target.value })}
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="height">Рост (см)</Label>
-                        <Input
-                          id="height"
-                          type="number"
-                          placeholder="175"
-                          value={tempProfile.height}
-                          onChange={(e) => setTempProfile({ ...tempProfile, height: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Пол</Label>
-                      <div className="flex gap-4">
-                        <Button
-                          type="button"
-                          variant={tempProfile.gender === 'male' ? 'default' : 'outline'}
-                          className="flex-1"
-                          onClick={() => setTempProfile({ ...tempProfile, gender: 'male' })}
-                        >
-                          <Icon name="User" size={16} className="mr-2" />
-                          Мужской
-                        </Button>
-                        <Button
-                          type="button"
-                          variant={tempProfile.gender === 'female' ? 'default' : 'outline'}
-                          className="flex-1"
-                          onClick={() => setTempProfile({ ...tempProfile, gender: 'female' })}
-                        >
-                          <Icon name="User" size={16} className="mr-2" />
-                          Женский
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button type="submit" onClick={handleSaveProfile}>Сохранить</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+              <UserProfileDialog
+                isOpen={isProfileOpen}
+                onOpenChange={setIsProfileOpen}
+                tempProfile={tempProfile}
+                setTempProfile={setTempProfile}
+                onSave={handleSaveProfile}
+              />
             </div>
           </div>
           <p className="text-lg text-muted-foreground">Москва • {new Date().toLocaleDateString('ru-RU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
@@ -306,76 +232,8 @@ const Index = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <Card className="lg:col-span-1 bg-card/50 backdrop-blur border-primary/20 animate-[fade-in_0.8s_ease-out]">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Icon name="Moon" size={24} className="text-primary" />
-                Текущая фаза
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center">
-              <div className="text-8xl mb-4 animate-[moon-glow_3s_ease-in-out_infinite]">
-                {currentMoonPhase.icon}
-              </div>
-              <h3 className="text-2xl font-semibold mb-2">{currentMoonPhase.name}</h3>
-              <p className="text-muted-foreground mb-4">
-                Освещенность: {currentMoonPhase.illumination.toFixed(0)}%
-              </p>
-              <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
-                <div 
-                  className="bg-gradient-to-r from-primary to-accent h-full transition-all duration-500"
-                  style={{ width: `${currentMoonPhase.illumination}%` }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="lg:col-span-2 bg-card/50 backdrop-blur border-primary/20 animate-[fade-in_1s_ease-out]">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Icon name="CloudSun" size={24} className="text-primary" />
-                Прогноз погоды • Москва
-              </CardTitle>
-              <CardDescription>Неделя</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-7 gap-2 mb-6">
-                {weatherData.map((day, index) => (
-                  <div 
-                    key={index}
-                    className="flex flex-col items-center p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                  >
-                    <p className="font-medium text-sm mb-1">{day.day}</p>
-                    <p className="text-xs text-muted-foreground mb-2">{day.date}</p>
-                    <Icon name={day.icon as any} size={32} className="text-primary mb-2" />
-                    <p className="text-lg font-semibold">{day.temp}°</p>
-                    <p className="text-xs text-muted-foreground mt-1">{day.condition}</p>
-                    <div className="flex items-center gap-1 mt-2">
-                      <Icon name="Gauge" size={12} className="text-muted-foreground" />
-                      <p className="text-xs text-muted-foreground">{day.pressure}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-primary/20">
-                <div className="flex flex-col items-center p-3 rounded-lg bg-accent/10">
-                  <Icon name="TrendingUp" size={20} className="text-primary mb-2" />
-                  <p className="text-xs text-muted-foreground mb-1">Макс. давление</p>
-                  <p className="text-lg font-semibold">{pressureStats.max} мм</p>
-                </div>
-                <div className="flex flex-col items-center p-3 rounded-lg bg-accent/10">
-                  <Icon name="Activity" size={20} className="text-primary mb-2" />
-                  <p className="text-xs text-muted-foreground mb-1">Среднее</p>
-                  <p className="text-lg font-semibold">{pressureStats.avg} мм</p>
-                </div>
-                <div className="flex flex-col items-center p-3 rounded-lg bg-accent/10">
-                  <Icon name="TrendingDown" size={20} className="text-primary mb-2" />
-                  <p className="text-xs text-muted-foreground mb-1">Мин. давление</p>
-                  <p className="text-lg font-semibold">{pressureStats.min} мм</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <MoonPhaseCard moonPhase={currentMoonPhase} />
+          <WeatherForecast weatherData={weatherData} pressureStats={pressureStats} />
         </div>
 
         <Tabs defaultValue="calendar" className="animate-[fade-in_1.2s_ease-out]">
@@ -395,66 +253,12 @@ const Index = () => {
           </TabsList>
 
           <TabsContent value="calendar">
-            <Card className="bg-card/50 backdrop-blur border-primary/20">
-              <CardHeader>
-                <CardTitle>Декабрь 2025</CardTitle>
-                <CardDescription>Лунные фазы и выходные дни</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-7 gap-2 mb-4">
-                  {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map((day) => (
-                    <div key={day} className="text-center font-semibold text-sm text-muted-foreground py-2">
-                      {day}
-                    </div>
-                  ))}
-                </div>
-                <div className="grid grid-cols-7 gap-2">
-                  {calendarDays.map((day, index) => {
-                    if (day === null) {
-                      return <div key={index} className="aspect-square" />;
-                    }
-                    const isWeekend = index % 7 >= 5;
-                    const isToday = day === today;
-                    const date = new Date(2025, 11, day);
-                    const moonPhase = getMoonPhase(date);
-                    
-                    return (
-                      <button
-                        key={index}
-                        onClick={() => setSelectedDate(date)}
-                        className={`
-                          aspect-square p-2 rounded-lg flex flex-col items-center justify-center
-                          transition-all hover:scale-105 hover:bg-primary/20
-                          ${isToday ? 'bg-primary text-primary-foreground font-bold ring-2 ring-primary' : 'bg-muted/30'}
-                          ${isWeekend ? 'text-destructive' : ''}
-                        `}
-                      >
-                        <span className="text-sm mb-1">{day}</span>
-                        <span className="text-xs">{moonPhase.icon}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="mt-6 flex flex-wrap gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded bg-primary" />
-                    <span>Сегодня</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded bg-destructive" />
-                    <span>Выходные</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>🌑</span>
-                    <span>Новолуние</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>🌕</span>
-                    <span>Полнолуние</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <LunarCalendar
+              calendarDays={calendarDays}
+              today={today}
+              getMoonPhase={getMoonPhase}
+              onDateSelect={setSelectedDate}
+            />
           </TabsContent>
 
           <TabsContent value="influence">
