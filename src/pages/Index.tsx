@@ -1,11 +1,295 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import Icon from '@/components/ui/icon';
 
 const Index = () => {
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  const getMoonPhase = (date: Date = new Date()) => {
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    
+    let c = 0;
+    let e = 0;
+    let jd = 0;
+    let b = 0;
+
+    if (month < 3) {
+      c = year - 1;
+      e = month + 12;
+    } else {
+      c = year;
+      e = month;
+    }
+
+    jd = Math.floor(365.25 * (c + 4716)) + Math.floor(30.6001 * (e + 1)) + day - 1524.5;
+    b = (jd - 2451550.1) / 29.530588853;
+    b = b - Math.floor(b);
+    
+    const phase = b * 8;
+    
+    return {
+      phase: phase,
+      illumination: (b < 0.5 ? b : 1 - b) * 200,
+      name: phase < 1 ? 'Новолуние' : phase < 2 ? 'Молодая луна' : phase < 3 ? 'Первая четверть' : phase < 4 ? 'Растущая луна' : phase < 5 ? 'Полнолуние' : phase < 6 ? 'Убывающая луна' : phase < 7 ? 'Последняя четверть' : 'Старая луна',
+      icon: phase < 1 ? '🌑' : phase < 2 ? '🌒' : phase < 3 ? '🌓' : phase < 4 ? '🌔' : phase < 5 ? '🌕' : phase < 6 ? '🌖' : phase < 7 ? '🌗' : '🌘'
+    };
+  };
+
+  const currentMoonPhase = getMoonPhase();
+
+  const weatherData = [
+    { day: 'Пн', date: '9 дек', temp: -5, condition: 'Снег', icon: 'CloudSnow' },
+    { day: 'Вт', date: '10 дек', temp: -8, condition: 'Ясно', icon: 'Sun' },
+    { day: 'Ср', date: '11 дек', temp: -6, condition: 'Облачно', icon: 'Cloud' },
+    { day: 'Чт', date: '12 дек', temp: -4, condition: 'Снег', icon: 'CloudSnow' },
+    { day: 'Пт', date: '13 дек', temp: -7, condition: 'Ясно', icon: 'Sun' },
+    { day: 'Сб', date: '14 дек', temp: -9, condition: 'Облачно', icon: 'Cloud' },
+    { day: 'Вс', date: '15 дек', temp: -10, condition: 'Метель', icon: 'CloudSnow' }
+  ];
+
+  const holidays2025 = [
+    { date: '1-6 января', name: 'Новогодние каникулы', type: 'holiday' },
+    { date: '7 января', name: 'Рождество', type: 'holiday' },
+    { date: '23 февраля', name: 'День защитника Отечества', type: 'holiday' },
+    { date: '8 марта', name: 'Международный женский день', type: 'holiday' },
+    { date: '1 мая', name: 'Праздник Весны и Труда', type: 'holiday' },
+    { date: '9 мая', name: 'День Победы', type: 'holiday' },
+    { date: '12 июня', name: 'День России', type: 'holiday' },
+    { date: '4 ноября', name: 'День народного единства', type: 'holiday' }
+  ];
+
+  const generateCalendar = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+    
+    const days = [];
+    for (let i = 0; i < startDay; i++) {
+      days.push(null);
+    }
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(i);
+    }
+    
+    return days;
+  };
+
+  const calendarDays = generateCalendar();
+  const today = new Date().getDate();
+
+  const lunarInfluence = [
+    { area: 'Здоровье', icon: 'Heart', recommendation: 'Благоприятный период для восстановления сил', status: 'good' },
+    { area: 'Карьера', icon: 'Briefcase', recommendation: 'Удачное время для новых начинаний', status: 'good' },
+    { area: 'Финансы', icon: 'TrendingUp', recommendation: 'Избегайте крупных трат', status: 'caution' },
+    { area: 'Отношения', icon: 'Users', recommendation: 'Время для укрепления связей', status: 'good' },
+    { area: 'Садоводство', icon: 'Sprout', recommendation: 'Оптимально для посадки корнеплодов', status: 'good' },
+    { area: 'Стрижка', icon: 'Scissors', recommendation: 'Волосы будут расти медленнее', status: 'neutral' }
+  ];
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4 color-black text-black">Добро пожаловать!</h1>
-        <p className="text-xl text-gray-600">тут будет отображаться ваш проект</p>
+    <div className="min-h-screen bg-gradient-to-br from-[#1A1F2C] via-[#221F3A] to-[#1A1F2C]">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <header className="text-center mb-12 animate-[fade-in_0.6s_ease-out]">
+          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-[#9b87f5] to-[#E5DEFF] bg-clip-text text-transparent">
+            Лунный календарь
+          </h1>
+          <p className="text-lg text-muted-foreground">Москва • {new Date().toLocaleDateString('ru-RU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        </header>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <Card className="lg:col-span-1 bg-card/50 backdrop-blur border-primary/20 animate-[fade-in_0.8s_ease-out]">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Icon name="Moon" size={24} className="text-primary" />
+                Текущая фаза
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center">
+              <div className="text-8xl mb-4 animate-[moon-glow_3s_ease-in-out_infinite]">
+                {currentMoonPhase.icon}
+              </div>
+              <h3 className="text-2xl font-semibold mb-2">{currentMoonPhase.name}</h3>
+              <p className="text-muted-foreground mb-4">
+                Освещенность: {currentMoonPhase.illumination.toFixed(0)}%
+              </p>
+              <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
+                <div 
+                  className="bg-gradient-to-r from-primary to-accent h-full transition-all duration-500"
+                  style={{ width: `${currentMoonPhase.illumination}%` }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="lg:col-span-2 bg-card/50 backdrop-blur border-primary/20 animate-[fade-in_1s_ease-out]">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Icon name="CloudSun" size={24} className="text-primary" />
+                Прогноз погоды • Москва
+              </CardTitle>
+              <CardDescription>Неделя</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-7 gap-2">
+                {weatherData.map((day, index) => (
+                  <div 
+                    key={index}
+                    className="flex flex-col items-center p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                  >
+                    <p className="font-medium text-sm mb-1">{day.day}</p>
+                    <p className="text-xs text-muted-foreground mb-2">{day.date}</p>
+                    <Icon name={day.icon as any} size={32} className="text-primary mb-2" />
+                    <p className="text-lg font-semibold">{day.temp}°</p>
+                    <p className="text-xs text-muted-foreground mt-1">{day.condition}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Tabs defaultValue="calendar" className="animate-[fade-in_1.2s_ease-out]">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="calendar" className="flex items-center gap-2">
+              <Icon name="Calendar" size={18} />
+              Календарь
+            </TabsTrigger>
+            <TabsTrigger value="influence" className="flex items-center gap-2">
+              <Icon name="Sparkles" size={18} />
+              Влияние луны
+            </TabsTrigger>
+            <TabsTrigger value="holidays" className="flex items-center gap-2">
+              <Icon name="Gift" size={18} />
+              Праздники
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="calendar">
+            <Card className="bg-card/50 backdrop-blur border-primary/20">
+              <CardHeader>
+                <CardTitle>Декабрь 2025</CardTitle>
+                <CardDescription>Лунные фазы и выходные дни</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-7 gap-2 mb-4">
+                  {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map((day) => (
+                    <div key={day} className="text-center font-semibold text-sm text-muted-foreground py-2">
+                      {day}
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 gap-2">
+                  {calendarDays.map((day, index) => {
+                    if (day === null) {
+                      return <div key={index} className="aspect-square" />;
+                    }
+                    const isWeekend = index % 7 >= 5;
+                    const isToday = day === today;
+                    const date = new Date(2025, 11, day);
+                    const moonPhase = getMoonPhase(date);
+                    
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedDate(date)}
+                        className={`
+                          aspect-square p-2 rounded-lg flex flex-col items-center justify-center
+                          transition-all hover:scale-105 hover:bg-primary/20
+                          ${isToday ? 'bg-primary text-primary-foreground font-bold ring-2 ring-primary' : 'bg-muted/30'}
+                          ${isWeekend ? 'text-destructive' : ''}
+                        `}
+                      >
+                        <span className="text-sm mb-1">{day}</span>
+                        <span className="text-xs">{moonPhase.icon}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="mt-6 flex flex-wrap gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded bg-primary" />
+                    <span>Сегодня</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded bg-destructive" />
+                    <span>Выходные</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>🌑</span>
+                    <span>Новолуние</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>🌕</span>
+                    <span>Полнолуние</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="influence">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {lunarInfluence.map((item, index) => (
+                <Card key={index} className="bg-card/50 backdrop-blur border-primary/20 hover:border-primary/40 transition-all">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <Icon name={item.icon as any} size={20} className="text-primary" />
+                        {item.area}
+                      </span>
+                      <Badge variant={item.status === 'good' ? 'default' : item.status === 'caution' ? 'destructive' : 'secondary'}>
+                        {item.status === 'good' ? '✓' : item.status === 'caution' ? '⚠' : '○'}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">{item.recommendation}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="holidays">
+            <Card className="bg-card/50 backdrop-blur border-primary/20">
+              <CardHeader>
+                <CardTitle>Производственный календарь 2025</CardTitle>
+                <CardDescription>Выходные и праздничные дни в России</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {holidays2025.map((holiday, index) => (
+                    <div 
+                      key={index}
+                      className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icon name="Gift" size={24} className="text-primary" />
+                        <div>
+                          <h4 className="font-semibold">{holiday.name}</h4>
+                          <p className="text-sm text-muted-foreground">{holiday.date}</p>
+                        </div>
+                      </div>
+                      <Badge variant="secondary">Праздник</Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        <footer className="mt-12 text-center text-sm text-muted-foreground animate-[fade-in_1.4s_ease-out]">
+          <p>🌙 Лунный календарь • Данные актуальны для Москвы</p>
+        </footer>
       </div>
     </div>
   );
