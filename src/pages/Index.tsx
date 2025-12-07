@@ -42,14 +42,23 @@ const Index = () => {
   const currentMoonPhase = getMoonPhase();
 
   const weatherData = [
-    { day: 'Пн', date: '9 дек', temp: -5, condition: 'Снег', icon: 'CloudSnow' },
-    { day: 'Вт', date: '10 дек', temp: -8, condition: 'Ясно', icon: 'Sun' },
-    { day: 'Ср', date: '11 дек', temp: -6, condition: 'Облачно', icon: 'Cloud' },
-    { day: 'Чт', date: '12 дек', temp: -4, condition: 'Снег', icon: 'CloudSnow' },
-    { day: 'Пт', date: '13 дек', temp: -7, condition: 'Ясно', icon: 'Sun' },
-    { day: 'Сб', date: '14 дек', temp: -9, condition: 'Облачно', icon: 'Cloud' },
-    { day: 'Вс', date: '15 дек', temp: -10, condition: 'Метель', icon: 'CloudSnow' }
+    { day: 'Пн', date: '9 дек', temp: -5, condition: 'Снег', icon: 'CloudSnow', pressure: 745 },
+    { day: 'Вт', date: '10 дек', temp: -8, condition: 'Ясно', icon: 'Sun', pressure: 758 },
+    { day: 'Ср', date: '11 дек', temp: -6, condition: 'Облачно', icon: 'Cloud', pressure: 752 },
+    { day: 'Чт', date: '12 дек', temp: -4, condition: 'Снег', icon: 'CloudSnow', pressure: 748 },
+    { day: 'Пт', date: '13 дек', temp: -7, condition: 'Ясно', icon: 'Sun', pressure: 762 },
+    { day: 'Сб', date: '14 дек', temp: -9, condition: 'Облачно', icon: 'Cloud', pressure: 755 },
+    { day: 'Вс', date: '15 дек', temp: -10, condition: 'Метель', icon: 'CloudSnow', pressure: 742 }
   ];
+
+  const getPressureData = () => {
+    const avgPressure = weatherData.reduce((sum, d) => sum + d.pressure, 0) / weatherData.length;
+    const maxPressure = Math.max(...weatherData.map(d => d.pressure));
+    const minPressure = Math.min(...weatherData.map(d => d.pressure));
+    return { avg: avgPressure.toFixed(0), max: maxPressure, min: minPressure };
+  };
+
+  const pressureStats = getPressureData();
 
   const holidays2025 = [
     { date: '1-6 января', name: 'Новогодние каникулы', type: 'holiday' },
@@ -138,7 +147,7 @@ const Index = () => {
               <CardDescription>Неделя</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-7 gap-2">
+              <div className="grid grid-cols-7 gap-2 mb-6">
                 {weatherData.map((day, index) => (
                   <div 
                     key={index}
@@ -149,8 +158,29 @@ const Index = () => {
                     <Icon name={day.icon as any} size={32} className="text-primary mb-2" />
                     <p className="text-lg font-semibold">{day.temp}°</p>
                     <p className="text-xs text-muted-foreground mt-1">{day.condition}</p>
+                    <div className="flex items-center gap-1 mt-2">
+                      <Icon name="Gauge" size={12} className="text-muted-foreground" />
+                      <p className="text-xs text-muted-foreground">{day.pressure}</p>
+                    </div>
                   </div>
                 ))}
+              </div>
+              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-primary/20">
+                <div className="flex flex-col items-center p-3 rounded-lg bg-accent/10">
+                  <Icon name="TrendingUp" size={20} className="text-primary mb-2" />
+                  <p className="text-xs text-muted-foreground mb-1">Макс. давление</p>
+                  <p className="text-lg font-semibold">{pressureStats.max} мм</p>
+                </div>
+                <div className="flex flex-col items-center p-3 rounded-lg bg-accent/10">
+                  <Icon name="Activity" size={20} className="text-primary mb-2" />
+                  <p className="text-xs text-muted-foreground mb-1">Среднее</p>
+                  <p className="text-lg font-semibold">{pressureStats.avg} мм</p>
+                </div>
+                <div className="flex flex-col items-center p-3 rounded-lg bg-accent/10">
+                  <Icon name="TrendingDown" size={20} className="text-primary mb-2" />
+                  <p className="text-xs text-muted-foreground mb-1">Мин. давление</p>
+                  <p className="text-lg font-semibold">{pressureStats.min} мм</p>
+                </div>
               </div>
             </CardContent>
           </Card>
